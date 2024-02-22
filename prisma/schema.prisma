@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Permissao {
+  ADMINISTRADOR
+  FUNCIONARIO
+}
+
+model Usuario {
+  id        String    @id @default(uuid())
+  nome      String
+  sobrenome String
+  permissao Permissao
+  cpf       String    @unique
+  status    Int       @default(1)
+
+  Sessao      Sessao[]
+  Patrimonios Patrimonio[]
+  manutencoes Manutencao[]
+}
+
+model Sessao {
+  id         String @id @default(uuid())
+  email      String @unique
+  senha      String
+  id_usuario String
+  status     Int    @default(1)
+
+  Usuario Usuario @relation(fields: [id_usuario], references: [id])
+}
+
+enum Estado_Patrimonio {
+  EXCELENTE
+  OTIMO
+  REGULAR
+  RUIM
+  PESSIMO
+}
+
+enum Origem_Patrimonio {
+  PREFEITURA
+  NV
+}
+
+model Patrimonio {
+  id            String            @id @default(uuid())
+  placa         String            @unique
+  descricao     String
+  estado        Estado_Patrimonio
+  valor         Float
+  origem        Origem_Patrimonio
+  status        Int               @default(1)
+  data_entrada  DateTime
+  data_saida    DateTime?
+  resp_entrega  String?
+  resp_retirada String?
+
+  id_localizacao String
+  id_categoria   String
+  id_usuario     String
+
+  localizacao Localizacao @relation(fields: [id_localizacao], references: [id])
+  categoria   Categoria   @relation(fields: [id_categoria], references: [id])
+  usuario     Usuario     @relation(fields: [id_usuario], references: [id])
+
+  manutencoes Manutencao[]
+}
+
+model Localizacao {
+  id        String @id @default(uuid())
+  descricao String @unique
+
+  patrimonios Patrimonio[]
+}
+
+model Categoria {
+  id        String @id @default(uuid())
+  descricao String @unique
+
+  patrimonios Patrimonio[]
+}
+
+model Manutencao {
+  id          String   @id @default(uuid())
+  descricao   String
+  data_inicio DateTime
+  data_fim    DateTime?
+  valor       Float
+  status      Int      @default(1)
+
+  id_patrimonio String
+  id_prestador  String
+  id_usuario    String
+
+  patrimonio Patrimonio @relation(fields: [id_patrimonio], references: [id])
+  prestador  Prestador  @relation(fields: [id_prestador], references: [id])
+  usuario    Usuario    @relation(fields: [id_usuario], references: [id])
+}
+
+model Prestador {
+  id        String @id @default(uuid())
+  nome      String
+  sobrenome String
+  descricao String
+  telefone  String
+  rua       String
+  numero    Int
+  bairro    String
+
+  manutecoes Manutencao[]
+}
